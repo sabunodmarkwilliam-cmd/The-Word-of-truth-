@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WOT Easy Praise</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    background: linear-gradient(to bottom right, #0f2027, #203a43, #2c5364);
+    color:white;
+    overflow:hidden;
+}
+
+/* MAIN CONTAINER */
+.app-container{
+    width:100%;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    position:relative;
+}
+
+/* TITLE */
+.centerTitle{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+}
+
+.big{
+    font-size:32vw;
+    font-weight:900;
+    letter-spacing:10px;
+    text-shadow:0 0 100px gold, 0 0 150px yellow;
+}
+
+.small{
+    font-size:7vw;
+    margin-top:-25px;
+    font-weight:bold;
+}
+
+.yellow{color:yellow;}
+.white{color:white;}
+
+button{
+    padding:6px 14px;
+    font-size:14px;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+    margin:4px;
+    background:#007BFF;
+    color:white;
+}
+
+.closeBtn{ background:red; }
+
+.topLeft{
+    position:absolute;
+    top:20px;
+    left:20px;
+}
+
+.topRight{
+    position:absolute;
+    top:20px;
+    right:20px;
+    font-size:28px;
+    cursor:pointer;
+}
+
+#menuBox{
+    position:absolute;
+    top:60px;
+    right:20px;
+    background:rgba(0,0,0,0.9);
+    padding:15px;
+    border-radius:8px;
+    display:none;
+}
+
+#menuBox button{
+    display:block;
+    width:180px;
+    margin:8px 0;
+}
+
+#inputArea{
+    display:none;
+    position:absolute;
+    bottom:20px;
+    width:90%;
+    max-width:400px;
+}
+
+#inputArea input,
+#inputArea textarea{
+    width:100%;
+    margin-top:8px;
+    padding:8px;
+    border-radius:6px;
+    border:none;
+}
+
+#inputArea textarea{
+    height:100px;
+    resize:none;
+}
+
+/* CONTROLS */
+#controlPanel{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    display:none;
+    background:rgba(0,0,0,0.8);
+    padding:10px 20px;
+    border-radius:10px;
+    z-index:9999;
+    cursor:move;
+}
+
+#controlPanel input{
+    width:150px;
+}
+
+/* SLIDE PREVIEW */
+#slidePreviewPanel{
+    position:fixed;
+    bottom:90px;
+    left:50%;
+    transform:translateX(-50%);
+    background:rgba(0,0,0,0.9);
+    padding:10px;
+    border-radius:10px;
+    max-width:90%;
+    max-height:200px;
+    overflow:auto;
+    display:none;
+    z-index:1000;
+}
+
+.slideThumb{
+    border:1px solid #555;
+    padding:8px;
+    margin:5px;
+    cursor:pointer;
+    font-size:12px;
+    white-space:pre-line;
+    background:#111;
+}
+
+.slideThumb:hover{
+    background:#333;
+}
+
+.activeSlide{
+    border:2px solid yellow;
+}
+
+/* PASSWORD */
+#passwordPrompt{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.9);
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    z-index:10000;
+}
+
+#passwordPrompt input{
+    padding:8px;
+    font-size:16px;
+    border-radius:6px;
+    border:none;
+    margin-top:8px;
+}
+
+#passwordPrompt button{
+    margin-top:10px;
+    padding:6px 14px;
+}
+
+#showPass{
+    margin-left:5px;
+    cursor:pointer;
+}
+
+/* FAVORITES PANEL */
+#favoritesPanel{
+    display:none;
+    position:fixed;
+    top:60px;
+    left:20px;
+    background:rgba(0,0,0,0.9);
+    padding:15px;
+    border-radius:8px;
+    max-height:70%;
+    overflow:auto;
+    z-index:999;
+}
+#favoritesPanel h3{ color:white; margin-bottom:10px; }
+
+/* SAVED SONGS PANEL */
+#savedSongsPanel{
+    display:none;
+    position:fixed;
+    top:60px;
+    right:20px;
+    background:rgba(0,0,0,0.9);
+    padding:15px;
+    border-radius:8px;
+    max-height:70%;
+    overflow:auto;
+    z-index:999;
+}
+#savedSongsPanel input{
+    width:100%;
+    padding:6px;
+    margin-bottom:8px;
+    border-radius:5px;
+    border:none;
+}
+#savedSongsPanel .closeSavedBtn{
+    background:red;
+    color:white;
+    width:100%;
+    margin-bottom:10px;
+    border-radius:5px;
+}
+</style>
+</head>
+<body>
+
+<!-- PASSWORD -->
+<div id="passwordPrompt">
+    <h2>Enter Password</h2>
+    <div>
+        <input type="password" id="passwordInput" placeholder="Password">
+        <span id="showPass">👁️</span>
+    </div>
+    <button onclick="checkPassword()">Enter</button>
+</div>
+
+<!-- INTRO -->
+<div id="intro" class="app-container" style="display:none;">
+    <div class="centerTitle">
+        <span class="yellow big">WOT</span>
+        <span class="white small">Easy Praise</span>
+    </div>
+    <div>
+        <button onclick="openApp()">Open Now</button>
+        <button class="closeBtn" onclick="closeApp()">Close</button>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div id="main" class="app-container" style="display:none;">
+    <button class="topLeft" onclick="goBack()">Back</button>
+    <div class="topRight" onclick="toggleMenu()">☰</div>
+
+    <div class="centerTitle">
+        <span class="yellow big">WOT</span>
+        <span class="white small">Easy Praise</span>
+    </div>
+
+    <div id="menuBox">
+        <button onclick="showInput()">Input Lyrics</button>
+        <button onclick="chooseBackground()">Choose Background</button>
+        <button onclick="showSavedSongs()">Saved Songs</button>
+        <button onclick="showController()">Show Controller</button>
+        <button onclick="showFavorites()">Favorites</button>
+    </div>
+
+    <!-- Hidden File Input -->
+    <input type="file" id="bgUpload" accept="image/*" style="display:none;">
+
+    <!-- Input Lyrics -->
+    <div id="inputArea">
+        <input type="text" id="songTitle" placeholder="Enter Song Title">
+        <textarea id="lyricsInput" placeholder="Paste lyrics (use spacing or enter to split slides)"></textarea>
+        <button onclick="saveLyrics()">Save</button>
+        <button onclick="exitInput()">Cancel</button>
+    </div>
+
+    <!-- Controller -->
+    <div id="controlPanel">
+        <button onclick="prevSlide()">Prev</button>
+        <button onclick="nextSlide()">Next</button>
+        &nbsp; Size:
+        <input type="range" min="40" max="150" value="80" onchange="changeFont(this.value)">
+        <button onclick="closeController()">Close Controller</button>
+        <button onclick="closeProjector()">Close Slide</button>
+<button onclick="reopenProjector()">Open Slide</button>
+    </div>
+
+    <!-- Slide Preview -->
+    <div id="slidePreviewPanel"></div>
+
+    <!-- Saved Songs -->
+    <div id="savedSongsPanel">
+        <button class="closeSavedBtn" onclick="closeSavedPanel()">Close</button>
+        <input type="text" id="searchSaved" placeholder="Search song..." oninput="filterSavedSongs()">
+        <div id="savedList"></div>
+    </div>
+
+    <!-- Favorites -->
+    <div id="favoritesPanel">
+        <h3>Favorites</h3>
+        <div id="favoritesList"></div>
+    </div>
+</div>
+
+<script>
+let songs = JSON.parse(localStorage.getItem("songs")) || [];
+let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+let projectorWindow = null;
+let slides = [];
+let index = 0;
+let fontSize = 80;
+let bgImage = "";
+
+/* PASSWORD */
+const PASSWORD = "Wordoftruth";
+document.getElementById("showPass").onclick = ()=>{
+    const p = document.getElementById("passwordInput");
+    p.type = p.type === "password" ? "text" : "password";
+}
+function checkPassword(){
+    const p = document.getElementById("passwordInput").value;
+    if(p === PASSWORD){
+        document.getElementById("passwordPrompt").style.display="none";
+        document.getElementById("intro").style.display="flex";
+    } else { alert("Wrong password!"); }
+}
+
+/* APP FUNCTIONS */
+function openApp(){ document.getElementById("intro").style.display="none"; document.getElementById("main").style.display="flex"; }
+function closeApp(){ if(confirm("Close application?")){ window.close(); } }
+function goBack(){ document.getElementById("main").style.display="none"; document.getElementById("intro").style.display="flex"; }
+function toggleMenu(){ const menu = document.getElementById("menuBox"); menu.style.display = menu.style.display === "block" ? "none" : "block"; }
+
+/* BACKGROUND */
+function chooseBackground(){ document.getElementById("bgUpload").click(); toggleMenu(); }
+document.getElementById("bgUpload").addEventListener("change", function(){
+    const file = this.files[0];
+    if(file){
+        const reader = new FileReader();
+        reader.onload = function(e){ bgImage = e.target.result; updateProjector(); alert("Background selected!"); }
+        reader.readAsDataURL(file);
+    }
+});
+
+/* LYRICS SAVE */
+function saveLyrics(){
+    const title = document.getElementById("songTitle").value.trim();
+    const lyricsText = document.getElementById("lyricsInput").value.trim();
+
+    if(!title || !lyricsText){
+        alert("Complete fields!");
+        return;
+    }
+
+    const existingIndex = songs.findIndex(s => 
+        s.title.trim().toLowerCase() === title.toLowerCase()
+    );
+
+    if(existingIndex >= 0){
+        alert("Song title already exists!");
+        return;
+    }
+
+    songs.push({title, lyrics:lyricsText});
+    localStorage.setItem("songs", JSON.stringify(songs));
+
+    alert("Saved successfully!");
+    exitInput();
+}
+
+function exitInput(){ document.getElementById("inputArea").style.display="none"; }
+function showInput(){ document.getElementById("inputArea").style.display="block"; toggleMenu(); }
+
+/* CONTROLLER SHOW/CLOSE */
+function closeController(){ document.getElementById("controlPanel").style.display="none"; }
+function showController(){ document.getElementById("controlPanel").style.display="block"; }
+
+/* SAVED SONGS */
+function showSavedSongs(){
+    const panel = document.getElementById("savedSongsPanel");
+    const list = document.getElementById("savedList");
+    panel.style.display = "block";
+    list.innerHTML = "";
+
+    songs.forEach((s,i)=>{
+        const div = document.createElement("div");
+        div.style.padding="6px";
+        div.style.margin="3px 0";
+        div.style.background="#222";
+        div.style.color="white";
+        div.style.display="flex";
+        div.style.justifyContent="space-between";
+        div.style.alignItems="center";
+
+        const titleSpan = document.createElement("span");
+        titleSpan.textContent = s.title;
+        titleSpan.style.cursor="pointer";
+        titleSpan.onclick = ()=>{ selectSong(s); };
+        div.appendChild(titleSpan);
+
+        const btnGroup = document.createElement("div");
+
+        const favBtn = document.createElement("button");
+        favBtn.textContent = "⭐";
+        favBtn.style.background="#444";
+        favBtn.style.color="yellow";
+        favBtn.style.border="none";
+        favBtn.style.borderRadius="4px";
+        favBtn.style.cursor="pointer";
+        favBtn.onclick = (e)=>{
+            e.stopPropagation();
+            addToFavorites(s);
+        };
+
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "🗑";
+        delBtn.style.background="red";
+        delBtn.style.color="white";
+        delBtn.style.border="none";
+        delBtn.style.borderRadius="4px";
+        delBtn.style.cursor="pointer";
+        delBtn.style.marginLeft="5px";
+        delBtn.onclick = (e)=>{
+            e.stopPropagation();
+            deleteSong(i);
+        };
+
+        btnGroup.appendChild(favBtn);
+        btnGroup.appendChild(delBtn);
+        div.appendChild(btnGroup);
+
+        list.appendChild(div);
+    });
+}
+
+function closeSavedPanel(){ document.getElementById("savedSongsPanel").style.display="none"; }
+function filterSavedSongs(){
+    const val = document.getElementById("searchSaved").value.toLowerCase();
+    document.querySelectorAll("#savedList div").forEach(d=>{
+        d.style.display = d.textContent.toLowerCase().includes(val) ? "flex" : "none";
+    });
+}
+
+/* FAVORITES PANEL */
+function showFavorites(){
+    const panel = document.getElementById("favoritesPanel");
+    const list = document.getElementById("favoritesList");
+    panel.style.display = panel.style.display === "block" ? "none" : "block";
+    list.innerHTML = "";
+    if(favorites.length===0){
+        const empty = document.createElement("div");
+        empty.style.color="white";
+        empty.innerText="No favorite songs yet.";
+        list.appendChild(empty);
+        return;
+    }
+    favorites.forEach((s,i)=>{
+        const div = document.createElement("div");
+        div.style.padding="6px";
+        div.style.margin="3px 0";
+        div.style.cursor="pointer";
+        div.style.background="#222";
+        div.style.color="white";
+        div.textContent = s.title;
+        div.onclick = ()=>{ selectSong(s); panel.style.display="none"; }
+        div.oncontextmenu = (e)=>{
+            e.preventDefault();
+            if(confirm(`Remove "${s.title}" from favorites?`)){
+                favorites.splice(i,1);
+                localStorage.setItem("favorites", JSON.stringify(favorites));
+                showFavorites();
+            }
+        }
+        list.appendChild(div);
+    });
+}
+
+function addToFavorites(song){
+    const exists = favorites.some(f => f.title === song.title);
+    if(exists){ alert("Already in Favorites!"); return; }
+    favorites.push(song);
+    localStorage.setItem("favorites", JSON.stringify(favorites));
+    alert(`"${song.title}" added to Favorites!`);
+}
+
+/* SELECT SONG */
+function selectSong(song){
+    slides = song.lyrics.split(/\n\s*\n/).map(l=>l.trim()).filter(l=>l!=="");
+    index=0;
+    openProjector();
+    document.getElementById("controlPanel").style.display="block";
+    generateSlidePreview();
+}
+
+/* PROJECTOR */
+function openProjector(){
+    if(projectorWindow && !projectorWindow.closed) projectorWindow.close();
+    projectorWindow = window.open("", "Projector", "fullscreen=yes");
+    projectorWindow.document.write(`
+        <html>
+        <head>
+        <style>
+        body{
+            margin:0;
+            background:${bgImage ? `url('${bgImage}') center/cover no-repeat` : "black"};
+            color:white;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            height:100vh;
+            font-family:Arial;
+            text-align:center;
+            white-space:pre-line;
+            font-size:${fontSize}px;
+            position:relative;
+        }
+        #slideBody{ position:relative; }
+        #closeBtn{
+            position:absolute; top:10px; right:20px;
+            background:red; color:white; border:none; padding:5px 10px;
+            cursor:pointer; font-size:16px; border-radius:5px;
+        }
+        </style>
+        </head>
+        <body>
+        <button id="closeBtn" onclick="window.close()">Close</button>
+        <div id="slideBody">${slides[index]}</div>
+        </body>
+        </html>
+    `);
+}
+
+/* UPDATE */
+function updateProjector(){
+    if(projectorWindow && !projectorWindow.closed){
+        const body = projectorWindow.document.getElementById("slideBody");
+        body.innerText = slides[index];
+        body.style.fontSize = fontSize+"px";
+        projectorWindow.document.body.style.background = bgImage ? `url('${bgImage}') center/cover no-repeat` : "black";
+    }
+}
+
+/* CLOSE PROJECTOR FROM MAIN SCREEN */
+function closeProjector(){
+    if(projectorWindow && !projectorWindow.closed){
+        projectorWindow.close();
+    }
+    projectorWindow = null;
+
+    // DILI na nato i-clear ang slides
+    document.getElementById("slidePreviewPanel").style.display="none";
+}
+
+/* CONTROLS */
+function nextSlide(){ index=(index+1)%slides.length; updateProjector(); highlightActive(); }
+function prevSlide(){ index=(index-1+slides.length)%slides.length; updateProjector(); highlightActive(); }
+function changeFont(size){ fontSize=size; updateProjector(); }
+
+/* SLIDE PREVIEW */
+function generateSlidePreview(){
+    const panel = document.getElementById("slidePreviewPanel");
+    panel.innerHTML = "";
+    panel.style.display="block";
+    slides.forEach((slide,i)=>{
+        const div=document.createElement("div");
+        div.className="slideThumb";
+        div.innerText=slide;
+        if(i===index) div.classList.add("activeSlide");
+        div.onclick = ()=>{
+            index=i; updateProjector(); highlightActive();
+        }
+        panel.appendChild(div);
+    });
+}
+
+function highlightActive(){
+    document.querySelectorAll(".slideThumb").forEach((t,i)=>{
+        t.classList.remove("activeSlide");
+        if(i===index) t.classList.add("activeSlide");
+    });
+}
+
+/* DRAG CONTROLLER */
+dragElement(document.getElementById("controlPanel"));
+function dragElement(el){
+    let pos1=0,pos2=0,pos3=0,pos4=0;
+    el.onmousedown=dragMouseDown;
+    function dragMouseDown(e){
+        e=e||window.event;
+        e.preventDefault();
+        pos3=e.clientX; pos4=e.clientY;
+        document.onmouseup=closeDrag;
+        document.onmousemove=elementDrag;
+    }
+    function elementDrag(e){
+        e=e||window.event;
+        e.preventDefault();
+        pos1=pos3-e.clientX; pos2=pos4-e.clientY;
+        pos3=e.clientX; pos4=e.clientY;
+        el.style.top=(el.offsetTop - pos2) + "px";
+        el.style.left=(el.offsetLeft - pos1) + "px";
+    }
+    function closeDrag(){ document.onmouseup=null; document.onmousemove=null; }
+}
+function deleteSong(index){
+    if(confirm(`Delete "${songs[index].title}"?`)){
+        songs.splice(index, 1);                       // tangtang ang song sa array
+        localStorage.setItem("songs", JSON.stringify(songs)); // update localStorage
+        showSavedSongs();                             // i-refresh ang panel
+        alert("Deleted successfully!");
+    }
+}
+// EXPORT FUNCTION
+function exportSongs(){
+    if(songs.length === 0){ alert("No songs to export!"); return; }
+    const dataStr = JSON.stringify(songs, null, 2);
+    const blob = new Blob([dataStr], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "saved_songs.json";
+    a.click();
+    URL.revokeObjectURL(url);
+    alert("Songs exported successfully!");
+}
+function reopenProjector(){
+    if(slides.length === 0){
+        alert("No slide loaded!");
+        return;
+    }
+
+    if(projectorWindow && !projectorWindow.closed){
+        alert("Slide already open!");
+        return;
+    }
+
+    openProjector();
+    generateSlidePreview();
+}
+</script>
+
+</body>
+</html>
+
+  
